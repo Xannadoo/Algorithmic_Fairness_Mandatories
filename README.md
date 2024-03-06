@@ -8,3 +8,16 @@
 - Task 3 (Model-agnostic explanations)
 - Task 4 (Reflection)
 
+
+Requirements:
+
+This work has been tested to work with the following:
+
+- Python 3.11.7
+- folktables==0.0.12
+- numpy==1.26.3
+- pandas==2.2.0
+- scikit-learn==1.4.1.post1
+- matplotlib==3.8.2
+- seaborn==0.13.2
+- shap==0.44.1
