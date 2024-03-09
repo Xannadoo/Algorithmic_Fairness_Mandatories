@@ -9,7 +9,7 @@
 - Task 4 (Reflection)
 
 
-Requirements: [requirements.txt](https://github.com/Xannadoo/Algorithmic_Fairness_Mandatories/blob/main/requirements.txt)
+Requirements: [requirements.txt](https://github.com/Xannadoo/Algorithmic_Fairness_Mandatories/blob/main/Mandatory_1/requirements.txt)
 
 This work has been tested to work with the following:
 
