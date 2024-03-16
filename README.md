@@ -21,3 +21,10 @@ This work has been tested to work with the following:
 - matplotlib==3.8.2
 - seaborn==0.13.2
 - shap==0.44.1
+
+## Mandatory assignment 2
+
+- Task: Train 3 classifiers
+    + Raw data
+    + De-correlated data
+    + FairPCA data
