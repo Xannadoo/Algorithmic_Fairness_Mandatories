@@ -33,3 +33,17 @@ This work has been tested to work with the following:
     + Raw data
     + De-correlated data
     + FairPCA data
+ 
+Requirements: [requirements.txt](https://github.com/Xannadoo/Algorithmic_Fairness_Mandatories/blob/main/Mandatory_2/requirements.txt)
+
+This work has been tested to work with the following:
+
+> Python 3.10.12
+>
+> folktables==0.0.12 <br>
+> numpy==1.26.3 <br>
+> pandas==2.2.0 <br>
+> scikit-learn==1.4.1.post1 <br>
+> matplotlib==3.8.2 <br>
+> seaborn==0.13.2 <br>
+> shap==0.44.1
