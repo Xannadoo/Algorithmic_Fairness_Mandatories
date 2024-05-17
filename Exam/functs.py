@@ -657,7 +657,11 @@ def plot_corr(df, method='pearson', feature_cols=[], show_specific_features=Fals
       plt.title(f"{corr_name}Correlation Coeff between all features (filtered by p > {alpha})")
       plt.show()
 
-def plot_feature(feature_name, feature_mapping, features_full, column_feature='Dropout', colors=['#c9ffc7', '#ffcea5'], show_ratio=True, labels=['No', 'Yes']):
+def plot_feature(feature_name, features_full, 
+                 column_feature='graduated', order=[], 
+                 colors=['#c9ffc7', '#ffcea5'], show_ratio=True, 
+                 labels=['No', 'Yes'], figsize=(7,5),
+                 save=False, file_name='img/default'):
   """
   Plot distribution of a feature and its relationship with another binary column feature.
 
@@ -679,7 +683,6 @@ def plot_feature(feature_name, feature_mapping, features_full, column_feature='D
   """
   # Data
   tmp_full_features = features_full.copy()
-  tmp_full_features[feature_name] = tmp_full_features[feature_name].map(feature_mapping)
   counts = tmp_full_features.groupby([feature_name, column_feature]).size().unstack(fill_value=0)
 
   # Calculate column_feature ratio
@@ -687,32 +690,40 @@ def plot_feature(feature_name, feature_mapping, features_full, column_feature='D
     counts[f'{column_feature} Ratio'] = counts[1] / (counts[0] + counts[1])
 
   # Plotting
-  fig, ax1 = plt.subplots(figsize=(12, 8))
+  fig, ax1 = plt.subplots(figsize=figsize)
 
   # Plotting column_feature counts
   bar_width = 0.35
   positions = np.arange(len(counts))
+  counts.reset_index(inplace=True)
+  mapping = {cor: i for i, cor in enumerate(order)}
+  key = counts[feature_name].map(mapping)
+  counts = counts.iloc[key.argsort()]
 
   ax1.bar(positions - bar_width/2, counts[1], width=bar_width, color=colors[1], label=labels[1])
   ax1.bar(positions + bar_width/2, counts[0], width=bar_width, color=colors[0], label=labels[0])
   ax1.set_ylabel('Number of Students', color='black')
   ax1.tick_params(axis='y', labelcolor='black')
   ax1.set_xticks(positions)
-  ax1.set_xticklabels(counts.index, rotation=90, ha='center')
+  ax1.set_xticklabels([x.replace('_', ' ').title() for x in counts[feature_name]], rotation=60, ha='right')
   ax1.legend(title=column_feature, loc='upper left')
 
   # Creating a second y-axis for column_feature ratio
   if show_ratio:
     ax2 = ax1.twinx()
-    ax2.plot(positions, counts[f'{column_feature} Ratio'], color='red', marker='o', linestyle='-')
-    ax2.set_ylabel(f'{column_feature} Ratio', color='red')
+    ax2.plot(positions, counts[f'{column_feature} Ratio'], color='red', marker='o', linestyle='-', label='_')
+    ax2.set_ylabel(f"Proportion {column_feature.replace('_', ' ').title()}", color='red')
     ax2.tick_params(axis='y', labelcolor='red')
 
-    plt.title(f"Distribution of {feature_name} and {column_feature} Ratio")
+    plt.title(f"Distribution of {feature_name.replace('_', ' ').title()} and {column_feature.replace('_', ' ').capitalize()} Ratio")
+    plt.ylim(0,1)
   else:
-    plt.title(f"Distribution of {feature_name} by {column_feature}")
-
+    plt.title(f"Distribution of {feature_name.replace('_', ' ').title()} by {column_feature.replace('_', ' ').capitalize()}")
+  
   plt.tight_layout()
+  ax1.legend(title=f"{column_feature.replace('_', ' ').title()}")
+  if save:
+     plt.savefig(f'img/{file_name}.png', transparent=True)
   plt.show()
 
 def plot_scores_and_group(df, title=None):
