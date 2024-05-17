@@ -17,6 +17,10 @@ from ucimlrepo import fetch_ucirepo
 
 import warnings
 
+seed = 0
+np.random.seed(seed)
+os.environ['PYTHONHASHSEED']=str(seed)
+
 def load_data():
     """
     This function loads and preprocesses data related to predicting student dropout and academic success from the UCI repository.
@@ -567,7 +571,7 @@ def corr_mat(X, method='pearson'):
 
     return corr_, p_
 
-def plot_corr(df, method='pearson', feature_cols=[], show_specific_features=False, num_corr=None):
+def plot_corr(df, method='pearson', feature_cols=[], show_specific_features=False, num_corr=None, figsize=(8,6)):
     """
     Plot correlation matrix heatmap.
 
@@ -600,24 +604,31 @@ def plot_corr(df, method='pearson', feature_cols=[], show_specific_features=Fals
 
     corr, p = corr_mat(df, method)
     feature_idx = [df.columns.get_loc(col) for col in feature_cols]
+    
 
     alpha = 0.05 # Significance level
-    corrected_alpha = alpha / (df.shape[1]**2/2) #bonferronni correction
+    corrected_alpha = alpha / ((df.shape[1]**2)/2) #bonferronni correction
 
+    _, ax = plt.subplots(1,1, figsize=figsize)
 
     if show_specific_features and len(feature_cols)==1 and num_corr:
+      # make bonferroni correction!
+      for i in range(corr.shape[0]):
+        for j in range(corr.shape[1]):
+          if p[i,j] > corrected_alpha:
+            corr[i,j] = 0
+         
       corr_spec_feature = corr[feature_idx[0]]
 
-      features_sorted_spec_feature = [ y for x,y in sorted(zip(corr_spec_feature, features), key = lambda x: abs(x[0]), reverse = True)]
-      corr_sorted_spec_feature = [ x for x,y in sorted(zip(corr_spec_feature, features), key = lambda x: abs(x[0]), reverse = True)]
+      features_sorted_spec_feature = [ y for x,y in sorted(zip(corr_spec_feature, df.columns), key = lambda x: abs(x[0]), reverse = True)]
+      corr_sorted_spec_feature = [ x for x,y in sorted(zip(corr_spec_feature, df.columns), key = lambda x: abs(x[0]), reverse = True)]
+
 
       features_num_corr_spec_feature = features_sorted_spec_feature[1:(num_corr+1)]
       corr_num_corr_spec_feature = corr_sorted_spec_feature[1:(num_corr+1)]
 
       # Plot 10 highest correlations with specific feature
       x_pos = np.arange(len(features_num_corr_spec_feature))
-
-      plt.figure(figsize=(8,6))
 
       colors = []
       for i in corr_num_corr_spec_feature:
@@ -626,36 +637,32 @@ def plot_corr(df, method='pearson', feature_cols=[], show_specific_features=Fals
           else:
               colors.append("#c9ffc7")
 
-
       for i in range(len(x_pos)):
-          plt.bar(x_pos[i], corr_num_corr_spec_feature[i], color = colors[i], align='center')
+          ax.bar(x_pos[i], corr_num_corr_spec_feature[i], color = colors[i], align='center')
 
-      plt.xticks(x_pos, features_num_corr_spec_feature, rotation = 45, ha = 'right')
-      plt.xlabel("Feature", fontsize = 12)
-      plt.ylabel('Correlation', fontsize = 12)
-      plt.title(f'All bonferroni p-values are significant (lower than 5%)', fontsize = 12)
-      plt.suptitle(f'{feature_cols[0]}: {num_corr} highest {corr_name}correlations', fontsize = 14)
-
-      plt.tight_layout()
-      plt.show()
-
+      ax.set_xticks(x_pos, [x.replace("_", " ").title() for x in features_num_corr_spec_feature], rotation = 60, ha = 'right')
+      ax.set_xlabel("Feature", fontsize = 12)
+      ax.set_ylabel('Correlation', fontsize = 12)
+      ax.set_title(f'All p-values are significant (lower than {alpha}%)', fontsize = 12)
+      plt.suptitle(f'{feature_cols[0].replace("_", " ").title()}: {num_corr} highest {corr_name}correlations', fontsize = 14)
 
     else:
       if show_specific_features:
-        plt.figure(figsize=(len(feature_cols),9))
 
-        sns.heatmap(corr[:, feature_idx], cmap="coolwarm", xticklabels=df.columns[feature_idx], yticklabels=df.columns,
-              mask = p[:, feature_idx]  > corrected_alpha, vmin=-1, vmax=1, square=True)
+        sns.heatmap(corr[:, feature_idx], cmap="coolwarm", 
+                    xticklabels=[x.replace("_", " ").title() for x in df.columns[feature_idx]], 
+                    yticklabels=[x.replace("_", " ").title() for x in df.columns],
+                    mask = p[:, feature_idx] > corrected_alpha, 
+                    vmin=-1, vmax=1, square=True, ax=ax)
       else:
-        plt.figure(figsize=(15,15))
         sns.heatmap(corr, cmap="coolwarm",
-                    xticklabels=df.columns, yticklabels=df.columns,
-                    square=True, vmin=-1, vmax=1, mask= p > corrected_alpha)
+                    xticklabels=[x.replace("_", " ").title() for x in  df.columns], yticklabels=[x.replace("_", " ").title() for x in  df.columns],
+                    square=True, vmin=-1, vmax=1, mask= p > corrected_alpha,ax=ax)
 
-
-
-      plt.title(f"{corr_name}Correlation Coeff between all features (filtered by p > {alpha})")
-      plt.show()
+      ax.set_title(f"{corr_name}Correlation Coeff between all features (filtered by p > {alpha})")
+    
+    plt.tight_layout()
+    plt.show()
 
 def plot_feature(feature_name, features_full, 
                  column_feature='graduated', order=[], 
