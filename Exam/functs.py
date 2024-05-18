@@ -21,7 +21,7 @@ seed = 0
 np.random.seed(seed)
 os.environ['PYTHONHASHSEED']=str(seed)
 
-def load_data():
+def load_data(from_begin=False, nationality=True):
     """
     This function loads and preprocesses data related to predicting student dropout and academic success from the UCI repository.
 
@@ -35,6 +35,9 @@ def load_data():
     df.columns = [i.lower().replace(" ", "_").replace("'", "").replace("(", "").replace(")", "").replace("\t", "") for i in df.columns]
     df.rename(columns={'nacionality': 'nationality'}, inplace=True)
 
+    if from_begin:
+       df.drop([x for x in df.columns if 'curricular' in x], axis=1, inplace=True)
+
     # Make a binary column for dropout
     data_y = predict_students_dropout_and_academic_success.data.targets
     data_y = data_y.Target.apply(lambda x: 1 if x == 'Graduate' else 0)
@@ -42,6 +45,20 @@ def load_data():
 
     for i,j in enumerate(columns_to_replace):
         df[columns_to_replace[i]] = df[columns_to_replace[i]].replace(dicts[i])
+
+        
+    if nationality:
+        
+        one_feats = ['application_mode', 'course', 
+                     'nationality', 'previous_qualification', 'mothers_qualification',
+                     'fathers_qualification', 'mothers_occupation',
+                     'fathers_occupation', 'marital_status']
+    else:
+        df.drop('nationality', axis=1, inplace=True)
+        one_feats = ['application_mode', 'course', 
+                     'previous_qualification', 'mothers_qualification',
+                     'fathers_qualification', 'mothers_occupation',
+                     'fathers_occupation', 'marital_status']
 
     df["mothers_occupation"] = df["mothers_occupation"].replace(inverse)
     df["fathers_occupation"] = df["fathers_occupation"].replace(inverse)
@@ -55,18 +72,20 @@ def load_data():
     features_full = df.copy()
     df.drop('graduated', axis=1, inplace=True)
 
-    features = pd.get_dummies(df, columns= ['application_mode', 'course', 
-                                            'nationality', 'previous_qualification', 'mothers_qualification',
-                                            'fathers_qualification', 'mothers_occupation',
-                                            'fathers_occupation', 'marital_status'], dtype='int')
+    features = pd.get_dummies(df, columns= one_feats, dtype='int')
 
     ## create 'default' student and drop columns:
     # we selected manually rather than using the 'drop_first' for control
     features.drop(['application_mode_1st_phase_general_contingent', 'course_nursing', 
-                    'nationality_portuguese', 'previous_qualification_upper_secondary',
+                    'previous_qualification_upper_secondary',
                     'mothers_qualification_upper_secondary', 'fathers_qualification_upper_secondary',
                     'mothers_occupation_unskilled','fathers_occupation_unskilled', 'marital_status_single'
                     ], axis=1, inplace=True)
+    
+    if 'nationality_portuguese' in features.columns:
+       features.drop(['nationality_portuguese'], axis=1, inplace=True )
+    
+    
      
 
     return features, features_full, labels#, groups, protected_cols
@@ -331,9 +350,7 @@ def get_pca_data(X_train, X_test, protected_cols, lambd=0):
   X_train_final = debias_features_adjust_fairness_level(X_train_debiased, X_train_pca, l=lambd)
   X_test_final = debias_features_adjust_fairness_level(X_test_debiased, X_test_pca, l=lambd)
 
-
-
-  return X_train_final, X_test_final
+  return X_train_final, X_test_final, fair
 
 def cross_validator(model, X, y, protected_cols=[], n=5, debias=None, lambd=0):
     """
@@ -358,10 +375,10 @@ def cross_validator(model, X, y, protected_cols=[], n=5, debias=None, lambd=0):
 
     for train_idx, test_idx in kfold.split(X, y): ## Split based on both X and y
         X_train, y_train = X.iloc[train_idx], y.iloc[train_idx]
-        X_test, y_test = X.iloc[test_idx], y.iloc[test_idx]
+        X_test = X.iloc[test_idx]
 
         if debias == 'fairPCA':
-          X_train, X_test = get_pca_data(X_train, X_test, protected_cols=protected_cols, lambd=lambd)
+          X_train, X_test,_ = get_pca_data(X_train, X_test, protected_cols=protected_cols, lambd=lambd)
         elif debias == 'geometric':
           X_train, X_test = get_debiased_data(X_train, X_test, protected_cols, lambd=lambd) #### This is if you want to use the geometric version
 
@@ -374,7 +391,7 @@ def cross_validator(model, X, y, protected_cols=[], n=5, debias=None, lambd=0):
 
     return y_hat
 
-def tune_lambda(model, X, y, protected_cols):
+def tune_lambda(model, X, y, protected_cols, groups):
   """
   Tune the lambda parameter for debiasing using fairPCA.
 
@@ -771,7 +788,7 @@ def plot_scores_and_group(df, title=None):
   plt.tight_layout()
   plt.show()
 
-def plot_scores_and_group_compare(df1, df2, titles=None, color_palette=None, bar_width=0.35):
+def plot_scores_and_group_compare(df1, df2, titles=None, color_palette=None, bar_width=0.35, figsize=(15, 6)):
     """
     Plot and compare scores by metric and group from two DataFrames.
 
@@ -787,7 +804,7 @@ def plot_scores_and_group_compare(df1, df2, titles=None, color_palette=None, bar
     """
 
     # Plotting
-    fig, axes = plt.subplots(1, 2, figsize=(15, 6), sharey=True)  # Create subplots side by side ####################
+    fig, axes = plt.subplots(1, 2, figsize=figsize, sharey=True)  # Create subplots side by side ####################
 
     # Iterate over DataFrames
     for i, (ax, df) in enumerate(zip(axes, [df1, df2])):
@@ -818,7 +835,7 @@ def plot_scores_and_group_compare(df1, df2, titles=None, color_palette=None, bar
     plt.tight_layout()
     plt.show()
 
-def tune_hyper_params(features, model, fixed_model_params, param_to_tune, param_values):
+def tune_hyper_params(features, model, fixed_model_params, param_to_tune, param_values, protected_cols=[], labels=[]):
   """
   Tune hyperparameters of a model and visualize their effect on balanced accuracy.
   3 plots are printed: The influence on the model trained on 'original df', 'nonprotected features' and 'debiased df' respectively.
@@ -837,7 +854,7 @@ def tune_hyper_params(features, model, fixed_model_params, param_to_tune, param_
     fixed_model_params[param_to_tune] = value
     return model(**fixed_model_params)
 
-  debiased_data_np, data_np = get_pca_data(features, features, protected_cols) ## Use FairPCA
+  debiased_data_np, data_np,_ = get_pca_data(features, features, protected_cols) ## Use FairPCA
 
   descriptions = ['original df', 'nonprotected features', 'debiased df']
   datasets = [features, data_np, debiased_data_np]
@@ -883,7 +900,7 @@ def plot_tune_lambda(lambda_values, accuracies, f1_scores, positive_rates):
   plt.show()
 
 ## Taken from assignment 1
-def feature_weights(features, model, top_n=10):
+def feature_weights(features, model, top_n=10, protected_cols=[], labels=[]):
   """
   Get the feature weights of a model and their odds ratios.
 
@@ -902,7 +919,7 @@ def feature_weights(features, model, top_n=10):
       weights_orgin_data, weights_np, weights_debiased = feature_weights(features=features, model=LogisticRegression(max_iter=1000, random_state=seed, C=0.05), top_n=10)
   """
 
-  debiased_data_np, data_np = get_pca_data(features, features, protected_cols) ## Use FairPCA
+  debiased_data_np, data_np, pca = get_pca_data(features, features, protected_cols) ## Use FairPCA
 
   descriptions = ['original df', 'nonprotected features', 'debiased df']
   datasets = [features, data_np, debiased_data_np]
@@ -919,4 +936,4 @@ def feature_weights(features, model, top_n=10):
 
     weights_dfs.append(odds.head(top_n))
 
-  return weights_dfs
+  return weights_dfs, pca

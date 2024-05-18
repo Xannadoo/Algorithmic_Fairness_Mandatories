@@ -24,7 +24,7 @@ dict_occupation_mother = {0:"student",
                           152:"sellers",
                           153:"personal_care_workers_and_the_like",
                           171:"skilled_construction_workers_and_the_like_except_electricians",
-                          173:"Skilled workers in printing, precision instrument manufacturing, jewelers, artisans and the like",
+                          173:"skilled workers in printing, precision instrument manufacturing, jewelers, artisans and the like",
                           175:"workers_in_food_processing_woodworking_clothing_and_other_industries_and_crafts",
                           191:"cleaning workers",
                           192:"unskilled_workers_in_agriculture_animal_production_fisheries_and_forestry",
@@ -189,9 +189,10 @@ dict_previous_education = {1:"secondary_education",
                            43:"higher_education_master_2nd_cycle"
                            }
 
+## nb 9991, 8014 evening attendance
 dict_course = {33:"biofuel_production_technologies",
                171:"animation_and_multimedia_design",
-               8014:"social_service_evening_attendance",
+               8014:"social_service",
                9003:"agronomy",
                9070:"communication_design",
                9085:"veterinary_nursing",
@@ -205,7 +206,7 @@ dict_course = {33:"biofuel_production_technologies",
                9670:"advertising_and_marketing_management",
                9773:"journalism_and_communication",
                9853:"basic_education",
-               9991:"management_evening_attendance"
+               9991:"management"
                }
 
 dict_marital_status = {1:"single", 
@@ -292,7 +293,7 @@ dict_collars = {"unskilled"     : [ 'cleaning workers',
                                     'skilled_workers_in_metallurgy_metalworking_and_similar',
                                     'armed_forces_sergeants',
                                     'protection_and_security_services_personnel',
-                                    'Skilled workers in printing, precision instrument manufacturing, jewelers, artisans and the like',
+                                    'skilled workers in printing, precision instrument manufacturing, jewelers, artisans and the like',
                                     'workers_in_food_processing_woodworking_clothing_and_other_industries_and_crafts',    
                                     'administrative_staff',
                                     'office_workers_secretaries_in_general_and_data_processing_operators',
