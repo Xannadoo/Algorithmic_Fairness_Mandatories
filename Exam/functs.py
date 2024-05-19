@@ -198,7 +198,7 @@ def get_debiased_data(X_train, X_test, protected_cols, lambd=0):
   X_test = X_test.drop(columns=protected_idx)
   X_test.columns = nonprotected_cols
 
-  return X_train_debiased, 
+  return X_train_debiased, X_test
 
 # Define a class for Fair PCA. The code is taken from our assignment 2.
 class FairPCA:
@@ -714,7 +714,7 @@ def plot_feature(feature_name, features_full,
     counts[f'{column_feature} Ratio'] = counts[1] / (counts[0] + counts[1])
 
   # Plotting
-  fig, ax1 = plt.subplots(figsize=figsize)
+  _, ax1 = plt.subplots(figsize=figsize)
 
   # Plotting column_feature counts
   bar_width = 0.35
@@ -748,7 +748,6 @@ def plot_feature(feature_name, features_full,
   ax1.legend(title=f"{column_feature.replace('_', ' ').title()}")
   if save:
      plt.savefig(f'img/{file_name}.png', transparent=True)
-  plt.show()
 
 def plot_scores_and_group(df, title=None):
   """
@@ -788,7 +787,7 @@ def plot_scores_and_group(df, title=None):
   plt.tight_layout()
   plt.show()
 
-def plot_scores_and_group_compare(df1, df2, titles=None, color_palette=None, bar_width=0.35, figsize=(15, 6)):
+def plot_scores_and_group_compare(dfs=[], titles=None, suptitle='', color_palette=None, bar_width=0.35, figsize=(15, 6)):
     """
     Plot and compare scores by metric and group from two DataFrames.
 
@@ -804,10 +803,10 @@ def plot_scores_and_group_compare(df1, df2, titles=None, color_palette=None, bar
     """
 
     # Plotting
-    fig, axes = plt.subplots(1, 2, figsize=figsize, sharey=True)  # Create subplots side by side ####################
+    fig, axes = plt.subplots(1, len(dfs), figsize=figsize, sharey=True)  # Create subplots side by side ####################
 
     # Iterate over DataFrames
-    for i, (ax, df) in enumerate(zip(axes, [df1, df2])):
+    for i, (ax, df) in enumerate(zip(axes, dfs)):
         metrics = df['metric'].unique()
         index = range(len(metrics))
 
@@ -830,8 +829,9 @@ def plot_scores_and_group_compare(df1, df2, titles=None, color_palette=None, bar
 
     # Set common y-label and legend
     axes[0].set_ylabel('Score')
-    axes[0].legend(title='Group', bbox_to_anchor=(1.05, 1), loc='upper left')
-
+    axes[-1].legend(title='Group', loc='upper right', bbox_to_anchor=(1.47,1))
+    plt.suptitle(suptitle)
+    plt.ylim(0,1)
     plt.tight_layout()
     plt.show()
 
@@ -865,7 +865,8 @@ def tune_hyper_params(features, model, fixed_model_params, param_to_tune, param_
       preds = cross_validator(model_with_params, data_X, labels, protected_cols=protected_cols)
       acc = balanced_accuracy_score(preds, labels)
       accuracies.append(acc)
-
+    
+    plt.ylim(0,1)
     plt.plot(param_values, accuracies)
     plt.title(f'Accuracy at different values of {param_to_tune} for {desc}')
     plt.xlabel(f'{param_to_tune}')
@@ -929,8 +930,8 @@ def feature_weights(features, model, top_n=10, protected_cols=[], labels=[]):
   for dataset in datasets:
     model.fit(dataset,labels)
     odds = pd.DataFrame(model.coef_[0], dataset.columns, columns=['coef'])
-    odds ['odds'] = np.exp(odds.coef)
-    odds['abs_odds'] = abs(odds.coef)
+    odds['odds'] = np.exp(odds.coef)
+    odds['abs_odds'] = abs(odds.odds)
     odds = odds.sort_values(by='abs_odds', ascending=False).drop('abs_odds', axis=1)
     odds = odds.round(decimals=3)
 
