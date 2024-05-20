@@ -47,3 +47,31 @@ This work has been tested to work with the following:
 > matplotlib==3.8.2 <br>
 > seaborn==0.13.2 <br>
 > shap==0.44.1
+
+***
+
+### Exam Assignment
+
+- Dataset: [Predict Students' Dropout and Academic Success](https://archive.ics.uci.edu/dataset/697/predict+students+dropout+and+academic+success)
+
+- We will explore the dataset, for its intended use and other possible uses, by considering its statistics, features, correllations etc.
+- We will consider attributes that should be protected for and attempt to debias the data set using geometric/fairPCA methods
+- We will also consider just removing those attributes to create a naive model
+- We will reflect upon the consquences of such a dataset, both for idealistic purposes (early indentification of student who may need extra support) and possible other uses (for example, preventing the enrollment of students who are likely to drop out based on non-academic features), taking into consideration that protected attributes form part of this dataset.
+
+Requirements: [requirements.txt](https://github.com/Xannadoo/Algorithmic_Fairness_Mandatories/blob/main/Exam/requirements.txt)
+
+This work has been tested to work with the following:
+
+> Python 3.10.14
+>
+> matplotlib==3.8.4
+> numpy==1.26.4
+> pandas==2.2.2
+> scikit-learn==1.4.2
+> scipy==1.13.0
+> seaborn==0.13.2
+> shap==0.45.1
+> tqdm==4.66.4
+> ucimlrepo==0.0.6
+> certifi
