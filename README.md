@@ -65,13 +65,13 @@ This work has been tested to work with the following:
 
 > Python 3.10.14
 >
-> matplotlib==3.8.4
-> numpy==1.26.4
-> pandas==2.2.2
-> scikit-learn==1.4.2
-> scipy==1.13.0
-> seaborn==0.13.2
-> shap==0.45.1
-> tqdm==4.66.4
-> ucimlrepo==0.0.6
-> certifi
+> matplotlib==3.8.4 <br>
+> numpy==1.26.4 <br>
+> pandas==2.2.2 <br>
+> scikit-learn==1.4.2 <br>
+> scipy==1.13.0 <br>
+> seaborn==0.13.2 <br>
+> shap==0.45.1 <br>
+> tqdm==4.66.4 <br>
+> ucimlrepo==0.0.6 <br>
+> certifi==2024.2.2 <br>
