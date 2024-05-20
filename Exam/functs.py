@@ -834,6 +834,7 @@ def plot_scores_and_group_compare(dfs=[], titles=None, suptitle='', color_palett
     axes[-1].legend(title='Group', loc='upper right', bbox_to_anchor=(1.47,1))
     plt.suptitle(suptitle)
     plt.tight_layout()
+    plt.savefig(f'img/{suptitle}_fairness.png', transparent=True)
     plt.show()
 
 def tune_hyper_params(features, model, fixed_model_params, param_to_tune, param_values, protected_cols=[], labels=[]):
@@ -899,6 +900,7 @@ def plot_tune_lambda(lambda_values, accuracies, f1_scores, positive_rates):
 
   plt.xticks(lambda_values, labels=[round(x,1) for x in lambda_values])
   plt.xlabel('lambda value')
+  plt.savefig(f'img/lambda_values.png', transparent=True)
   plt.show()
 
 ## Taken from assignment 1
