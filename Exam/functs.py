@@ -37,6 +37,7 @@ def load_data(from_begin=False, nationality=True):
 
     if from_begin:
        df.drop([x for x in df.columns if 'curricular' in x], axis=1, inplace=True)
+       df.drop(['debtor','tuition_fees_up_to_date'], axis=1, inplace=True)
 
     # Make a binary column for dropout
     data_y = predict_students_dropout_and_academic_success.data.targets
@@ -333,7 +334,6 @@ def get_pca_data(X_train, X_test, protected_cols, lambd=0):
       DataFrame: Debiased and PCA-transformed training features.
       DataFrame: Debiased and PCA-transformed testing features.
   """
-  nonprotected_cols = [col for col in X_train.columns if col not in protected_cols]
   protected_idx = [X_train.columns.get_loc(col) for col in protected_cols]
 
   n_components = len(X_train.columns) - len(protected_idx)
@@ -588,7 +588,8 @@ def corr_mat(X, method='pearson'):
 
     return corr_, p_
 
-def plot_corr(df, method='pearson', feature_cols=[], show_specific_features=False, num_corr=None, figsize=(8,6)):
+def plot_corr(df, method='pearson', feature_cols=[], show_specific_features=False, 
+              num_corr=None, figsize=(8,6),ax=False, n=False):
     """
     Plot correlation matrix heatmap.
 
@@ -626,7 +627,10 @@ def plot_corr(df, method='pearson', feature_cols=[], show_specific_features=Fals
     alpha = 0.05 # Significance level
     corrected_alpha = alpha / ((df.shape[1]**2)/2) #bonferronni correction
 
-    _, ax = plt.subplots(1,1, figsize=figsize)
+    if ax==False:
+        _, ax = plt.subplots(1,1, figsize=figsize)
+    if n == False:
+       n = df.shape[1]
 
     if show_specific_features and len(feature_cols)==1 and num_corr:
       # make bonferroni correction!
@@ -666,20 +670,19 @@ def plot_corr(df, method='pearson', feature_cols=[], show_specific_features=Fals
     else:
       if show_specific_features:
 
-        sns.heatmap(corr[:, feature_idx], cmap="coolwarm", 
-                    xticklabels=[x.replace("_", " ").title() for x in df.columns[feature_idx]], 
-                    yticklabels=[x.replace("_", " ").title() for x in df.columns],
-                    mask = p[:, feature_idx] > corrected_alpha, 
+        sns.heatmap(corr[:n, feature_idx], cmap="coolwarm", 
+                    xticklabels=[str(x).replace("_", " ").title() for x in df.columns[feature_idx]], 
+                    yticklabels=[str(x).replace("_", " ").title() for x in df.columns[:n]],
+                    mask = p[:n, feature_idx] > corrected_alpha, 
                     vmin=-1, vmax=1, square=True, ax=ax)
       else:
         sns.heatmap(corr, cmap="coolwarm",
-                    xticklabels=[x.replace("_", " ").title() for x in  df.columns], yticklabels=[x.replace("_", " ").title() for x in  df.columns],
+                    xticklabels=[str(x).replace("_", " ").title() for x in  df.columns], yticklabels=[x.replace("_", " ").title() for x in  df.columns],
                     square=True, vmin=-1, vmax=1, mask= p > corrected_alpha,ax=ax)
 
       ax.set_title(f"{corr_name}Correlation Coeff between all features (filtered by p > {alpha})")
     
     plt.tight_layout()
-    plt.show()
 
 def plot_feature(feature_name, features_full, 
                  column_feature='graduated', order=[], 
@@ -691,7 +694,6 @@ def plot_feature(feature_name, features_full,
 
   Parameters:
       feature_name (str): Name of the feature to plot.
-      feature_mapping (dict): Mapping dictionary to encode feature values.
       features_full (DataFrame): Full DataFrame containing the features.
       column_feature (str, optional): Binary column feature. Defaults to 'Dropout'.
       colors (list, optional): Colors for plotting. Defaults to ['#c9ffc7', '#ffcea5'].
@@ -831,7 +833,6 @@ def plot_scores_and_group_compare(dfs=[], titles=None, suptitle='', color_palett
     axes[0].set_ylabel('Score')
     axes[-1].legend(title='Group', loc='upper right', bbox_to_anchor=(1.47,1))
     plt.suptitle(suptitle)
-    plt.ylim(0,1)
     plt.tight_layout()
     plt.show()
 
@@ -894,7 +895,7 @@ def plot_tune_lambda(lambda_values, accuracies, f1_scores, positive_rates):
           ax[i].plot(df.iloc[:,j], label=df.columns[j])
           ax[i].set_title(f'{titles[i]}')
 
-  ax[1].legend(bbox_to_anchor=(1,1))
+  ax[0].legend(bbox_to_anchor=(1,1))
 
   plt.xticks(lambda_values, labels=[round(x,1) for x in lambda_values])
   plt.xlabel('lambda value')
