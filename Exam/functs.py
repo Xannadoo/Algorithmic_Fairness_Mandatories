@@ -934,10 +934,9 @@ def feature_weights(features, model, top_n=10, protected_cols=[], labels=[]):
     model.fit(dataset,labels)
     odds = pd.DataFrame(model.coef_[0], dataset.columns, columns=['coef'])
     odds['odds'] = np.exp(odds.coef)
-    odds['abs_odds'] = abs(odds.odds)
-    odds = odds.sort_values(by='abs_odds', ascending=False).drop('abs_odds', axis=1)
+    odds = odds.sort_values(by='odds', key=lambda x: abs(1-abs(x)), ascending=False)
     odds = odds.round(decimals=3)
 
     weights_dfs.append(odds.head(top_n))
 
-  return weights_dfs, pca
+  return weights_dfs, pca, model
